@@ -38,7 +38,7 @@ function Dashboard() {
     return <PageShell><LoadingState /></PageShell>;
   }
 
-  const filtered = (quotes.data ?? []).filter((q) =>
+  const filtered = (quotes.data ?? []).filter((q: any) =>
     !search.trim() ? true : q.customer_name.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -84,7 +84,7 @@ function Dashboard() {
             ) : filtered.length === 0 ? (
               <EmptyQuotes />
             ) : (
-              filtered.map((q) => (
+              filtered.map((q: any) => (
                 <Link
                   key={q.id}
                   to="/q/$token"

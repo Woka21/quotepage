@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const getMyBusiness = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+    const { data, error } = await (context.supabase as any)
       .from("businesses")
       .select("*")
       .eq("user_id", context.userId)
@@ -29,18 +29,18 @@ export const upsertBusiness = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => businessSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const existing = await context.supabase
+    const existing = await (context.supabase as any)
       .from("businesses")
       .select("id")
       .eq("user_id", context.userId)
       .maybeSingle();
     if (existing.data?.id) {
-      const { data: row, error } = await context.supabase
+      const { data: row, error } = await (context.supabase as any)
         .from("businesses").update(data).eq("id", existing.data.id).select().single();
       if (error) throw new Error(error.message);
       return row;
     }
-    const { data: row, error } = await context.supabase
+    const { data: row, error } = await (context.supabase as any)
       .from("businesses").insert({ ...data, user_id: context.userId }).select().single();
     if (error) throw new Error(error.message);
     return row;
@@ -70,13 +70,13 @@ export const createQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => createQuoteSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const biz = await context.supabase
+    const biz = await (context.supabase as any)
       .from("businesses").select("id").eq("user_id", context.userId).maybeSingle();
     if (biz.error) throw new Error(biz.error.message);
     if (!biz.data) throw new Error("Complete onboarding first.");
     const business_id = biz.data.id;
 
-    const cust = await context.supabase
+    const cust = await (context.supabase as any)
       .from("customers")
       .insert({
         business_id,
@@ -88,10 +88,10 @@ export const createQuote = createServerFn({ method: "POST" })
       .select("id").single();
     if (cust.error) throw new Error(cust.error.message);
 
-    const { data: nbr, error: nbrErr } = await context.supabase.rpc("next_quote_number", { b_id: business_id });
+    const { data: nbr, error: nbrErr } = await (context.supabase as any).rpc("next_quote_number", { b_id: business_id });
     if (nbrErr) throw new Error(nbrErr.message);
 
-    const q = await context.supabase.from("quotes").insert({
+    const q = await (context.supabase as any).from("quotes").insert({
       business_id,
       customer_id: cust.data.id,
       quote_number: nbr as unknown as string,
@@ -102,7 +102,7 @@ export const createQuote = createServerFn({ method: "POST" })
     }).select("*").single();
     if (q.error) throw new Error(q.error.message);
 
-    const li = await context.supabase.from("line_items").insert(
+    const li = await (context.supabase as any).from("line_items").insert(
       data.items.map((it) => ({
         quote_id: q.data.id,
         description: it.description,
@@ -118,7 +118,7 @@ export const createQuote = createServerFn({ method: "POST" })
 export const listQuotes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+    const { data, error } = await (context.supabase as any)
       .from("quotes")
       .select("id, quote_number, status, job_type, created_at, token, customer:customers(name), line_items(quantity, unit_price)")
       .order("created_at", { ascending: false });
@@ -142,7 +142,7 @@ export const updateQuoteStatus = createServerFn({ method: "POST" })
     z.object({ id: z.string().uuid(), status: z.enum(["draft", "sent", "accepted", "declined", "expired"]) }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("quotes").update({ status: data.status }).eq("id", data.id);
+    const { error } = await (context.supabase as any).from("quotes").update({ status: data.status }).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

@@ -239,13 +239,13 @@
   background-color: #2B7A6F;
   color: #ffffff;
 }
-@utility qp-btn-primary:hover { background-color: #246a60; }
+.qp-btn-primary:hover { background-color: #246a60; }
 @utility qp-btn-ghost {
   background-color: transparent;
   color: #1C1C1A;
   border-color: #E5E4E0;
 }
-@utility qp-btn-ghost:hover { background-color: rgba(255,255,255,0.5); }
+.qp-btn-ghost:hover { background-color: rgba(255,255,255,0.5); }
 
 /* Inputs — minimal */
 @utility qp-input {
@@ -260,8 +260,8 @@
   outline: none;
   transition: border-color 0.15s, background-color 0.15s;
 }
-@utility qp-input:focus {
+.qp-input:focus {
   border-color: #2B7A6F;
   background: rgba(255,255,255,0.85);
 }
-@utility qp-input::placeholder { color: #9b9b96; }
+.qp-input::placeholder { color: #9b9b96; }

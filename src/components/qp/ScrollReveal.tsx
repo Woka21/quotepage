@@ -13,19 +13,29 @@ export function ScrollReveal({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      el.classList.add("is-visible");
+      return;
+    }
+    // Fallback in case IO never fires (e.g. measurement edge cases)
+    const fallback = window.setTimeout(() => el.classList.add("is-visible"), 600);
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
+            window.clearTimeout(fallback);
             setTimeout(() => el.classList.add("is-visible"), delay);
             io.unobserve(el);
           }
         });
       },
-      { threshold: 0.12 },
+      { threshold: 0.01, rootMargin: "0px 0px -10% 0px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    return () => {
+      window.clearTimeout(fallback);
+      io.disconnect();
+    };
   }, [delay]);
   return (
     <div ref={ref} className={`qp-reveal ${className}`}>

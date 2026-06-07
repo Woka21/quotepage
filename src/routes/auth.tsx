@@ -21,6 +21,12 @@ function AuthPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) navigate({ to: "/dashboard", replace: true });
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        navigate({ to: "/dashboard", replace: true });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
   async function onSubmit(e: React.FormEvent) {

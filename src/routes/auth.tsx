@@ -21,6 +21,12 @@ function AuthPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) navigate({ to: "/dashboard", replace: true });
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        navigate({ to: "/dashboard", replace: true });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -29,7 +35,11 @@ function AuthPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo:
+          typeof window !== "undefined" ? `${window.location.origin}/auth` : undefined,
+      },
     });
     setLoading(false);
     if (error) {
@@ -66,7 +76,7 @@ function AuthPage() {
             <>
               <h1 className="text-2xl" style={{ color: "#1C1C1A" }}>Sign in</h1>
               <p className="mt-2 text-sm" style={{ color: "#6B6B67" }}>
-                Enter your email — we'll send a one-time link. No password.
+                Enter your email — we'll send a 6-digit code and a one-tap link. Use either. No password.
               </p>
               <form onSubmit={onSubmit} className="mt-6 space-y-3">
                 <input
@@ -87,7 +97,8 @@ function AuthPage() {
             <>
               <h1 className="text-2xl" style={{ color: "#1C1C1A" }}>Check your inbox</h1>
               <p className="mt-2 text-sm" style={{ color: "#6B6B67" }}>
-                We sent a 6-digit code to <span style={{ color: "#1C1C1A" }}>{email}</span>. Enter it below to sign in.
+                We sent a 6-digit code <em>and</em> a one-tap link to{" "}
+                <span style={{ color: "#1C1C1A" }}>{email}</span>. Use whichever you prefer.
               </p>
               <form onSubmit={onVerify} className="mt-6 space-y-3">
                 <input

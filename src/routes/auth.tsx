@@ -14,6 +14,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -27,7 +29,7 @@ function AuthPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: typeof window !== "undefined" ? window.location.origin + "/dashboard" : undefined },
+      options: { shouldCreateUser: true },
     });
     setLoading(false);
     if (error) {
@@ -35,6 +37,24 @@ function AuthPage() {
       return;
     }
     setSent(true);
+  }
+
+  async function onVerify(e: React.FormEvent) {
+    e.preventDefault();
+    const token = code.trim();
+    if (token.length < 6) return;
+    setVerifying(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token,
+      type: "email",
+    });
+    setVerifying(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    navigate({ to: "/dashboard", replace: true });
   }
 
   return (
@@ -67,9 +87,26 @@ function AuthPage() {
             <>
               <h1 className="text-2xl" style={{ color: "#1C1C1A" }}>Check your inbox</h1>
               <p className="mt-2 text-sm" style={{ color: "#6B6B67" }}>
-                We sent a sign-in link to <span style={{ color: "#1C1C1A" }}>{email}</span>. Open it on this device.
+                We sent a 6-digit code to <span style={{ color: "#1C1C1A" }}>{email}</span>. Enter it below to sign in.
               </p>
-              <button onClick={() => setSent(false)} className="qp-btn qp-btn-ghost mt-6 w-full">
+              <form onSubmit={onVerify} className="mt-6 space-y-3">
+                <input
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  required
+                  autoFocus
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                  className="qp-input text-center tracking-[0.5em] text-lg"
+                />
+                <button type="submit" disabled={verifying || code.length < 6} className="qp-btn qp-btn-primary w-full disabled:opacity-60">
+                  {verifying ? "Verifying…" : "Verify code"}
+                </button>
+              </form>
+              <button onClick={() => { setSent(false); setCode(""); }} className="qp-btn qp-btn-ghost mt-3 w-full">
                 Use a different email
               </button>
             </>

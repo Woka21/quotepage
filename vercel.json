@@ -2,7 +2,5 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/client",
   "framework": "other",
-  "serverFunctions": {
-    "directory": "dist/server"
-  }
+  "nodeVersion": "22.x"
 }
